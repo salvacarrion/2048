@@ -1,0 +1,30 @@
+######################################################################
+##### RANDOM HEURISTIC ###############################################
+######################################################################
+
+----------------------------------------------------------------------
+Parameters:
+	Max. moves: 1000
+
+Final stats:
+	#1  	Score: 544   		Max. tile: 32   		Total moves: #111  		Max. depth: 4
+	#2  	Score: 1328  		Max. tile: 128  		Total moves: #155  		Max. depth: 4
+	#3  	Score: 1028  		Max. tile: 128  		Total moves: #137  		Max. depth: 4
+	#4  	Score: 1396  		Max. tile: 128  		Total moves: #172  		Max. depth: 4
+	#5  	Score: 636   		Max. tile: 64   		Total moves: #94   		Max. depth: 4
+	#6  	Score: 636   		Max. tile: 64   		Total moves: #92   		Max. depth: 4
+	#7  	Score: 2460  		Max. tile: 256  		Total moves: #257  		Max. depth: 4
+	#8  	Score: 412   		Max. tile: 32   		Total moves: #77   		Max. depth: 4
+	#9  	Score: 584   		Max. tile: 64   		Total moves: #87   		Max. depth: 4
+	#10 	Score: 580   		Max. tile: 64   		Total moves: #98   		Max. depth: 4
+
+	(*)		Avg. score: 960   	Most freq. tile: 64   	Avg. moves: #128  		Avg. depth: 4
+	(*)		Avg. time: 00:00:0.37023
+
+Top tiles:
+	1.	Tile 256 was reached 1 times (10.00%)
+	2.	Tile 128 was reached 3 times (30.00%)
+	3.	Tile 64 was reached 4 times (40.00%)
+	4.	Tile 32 was reached 2 times (20.00%)
+
+Total time: 00:00:3.702

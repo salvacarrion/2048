@@ -1,0 +1,29 @@
+######################################################################
+##### EAGER HEURISTIC ################################################
+######################################################################
+
+----------------------------------------------------------------------
+Parameters:
+	Max. moves: 1000
+
+Final stats:
+	#1  	Score: 3044  		Max. tile: 256  		Total moves: #275  		Max. depth: 4
+	#2  	Score: 2724  		Max. tile: 256  		Total moves: #246  		Max. depth: 4
+	#3  	Score: 2992  		Max. tile: 256  		Total moves: #294  		Max. depth: 4
+	#4  	Score: 1408  		Max. tile: 128  		Total moves: #173  		Max. depth: 4
+	#5  	Score: 1312  		Max. tile: 128  		Total moves: #154  		Max. depth: 4
+	#6  	Score: 808   		Max. tile: 64   		Total moves: #120  		Max. depth: 4
+	#7  	Score: 696   		Max. tile: 64   		Total moves: #98   		Max. depth: 4
+	#8  	Score: 2100  		Max. tile: 128  		Total moves: #214  		Max. depth: 4
+	#9  	Score: 3192  		Max. tile: 256  		Total moves: #309  		Max. depth: 4
+	#10 	Score: 1360  		Max. tile: 128  		Total moves: #153  		Max. depth: 4
+
+	(*)		Avg. score: 1963  	Most freq. tile: 256  	Avg. moves: #203  		Avg. depth: 4
+	(*)		Avg. time: 00:00:0.61068
+
+Top tiles:
+	1.	Tile 256 was reached 4 times (40.00%)
+	2.	Tile 128 was reached 4 times (40.00%)
+	3.	Tile 64 was reached 2 times (20.00%)
+
+Total time: 00:00:6.107

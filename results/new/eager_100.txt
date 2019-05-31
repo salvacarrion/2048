@@ -1,0 +1,115 @@
+Parameters:
+	Max. moves: 2000
+
+Final stats:
+	#1  	Score: 636   		Max. tile: 64   		Total moves: #97   		Max. depth: 20
+	#2  	Score: 2508  		Max. tile: 256  		Total moves: #236  		Max. depth: 20
+	#3  	Score: 556   		Max. tile: 64   		Total moves: #84   		Max. depth: 20
+	#4  	Score: 2432  		Max. tile: 256  		Total moves: #223  		Max. depth: 20
+	#5  	Score: 1508  		Max. tile: 128  		Total moves: #175  		Max. depth: 20
+	#6  	Score: 1108  		Max. tile: 64   		Total moves: #144  		Max. depth: 20
+	#7  	Score: 1544  		Max. tile: 128  		Total moves: #180  		Max. depth: 20
+	#8  	Score: 2480  		Max. tile: 256  		Total moves: #241  		Max. depth: 20
+	#9  	Score: 1476  		Max. tile: 128  		Total moves: #173  		Max. depth: 20
+	#10 	Score: 1692  		Max. tile: 128  		Total moves: #187  		Max. depth: 20
+	#11 	Score: 1132  		Max. tile: 128  		Total moves: #127  		Max. depth: 20
+	#12 	Score: 1468  		Max. tile: 128  		Total moves: #159  		Max. depth: 20
+	#13 	Score: 1408  		Max. tile: 128  		Total moves: #168  		Max. depth: 20
+	#14 	Score: 1232  		Max. tile: 128  		Total moves: #141  		Max. depth: 20
+	#15 	Score: 2520  		Max. tile: 256  		Total moves: #238  		Max. depth: 20
+	#16 	Score: 1812  		Max. tile: 128  		Total moves: #201  		Max. depth: 20
+	#17 	Score: 1152  		Max. tile: 128  		Total moves: #126  		Max. depth: 20
+	#18 	Score: 1488  		Max. tile: 128  		Total moves: #179  		Max. depth: 20
+	#19 	Score: 2436  		Max. tile: 256  		Total moves: #229  		Max. depth: 20
+	#20 	Score: 2232  		Max. tile: 128  		Total moves: #228  		Max. depth: 20
+	#21 	Score: 1232  		Max. tile: 128  		Total moves: #144  		Max. depth: 20
+	#22 	Score: 1712  		Max. tile: 128  		Total moves: #183  		Max. depth: 20
+	#23 	Score: 1756  		Max. tile: 128  		Total moves: #168  		Max. depth: 20
+	#24 	Score: 2840  		Max. tile: 256  		Total moves: #288  		Max. depth: 20
+	#25 	Score: 3028  		Max. tile: 256  		Total moves: #274  		Max. depth: 20
+	#26 	Score: 1248  		Max. tile: 128  		Total moves: #137  		Max. depth: 20
+	#27 	Score: 2408  		Max. tile: 256  		Total moves: #223  		Max. depth: 20
+	#28 	Score: 2116  		Max. tile: 128  		Total moves: #208  		Max. depth: 20
+	#29 	Score: 1336  		Max. tile: 128  		Total moves: #155  		Max. depth: 20
+	#30 	Score: 1312  		Max. tile: 128  		Total moves: #142  		Max. depth: 20
+	#31 	Score: 1060  		Max. tile: 64   		Total moves: #149  		Max. depth: 20
+	#32 	Score: 1048  		Max. tile: 128  		Total moves: #131  		Max. depth: 20
+	#33 	Score: 2296  		Max. tile: 256  		Total moves: #205  		Max. depth: 20
+	#34 	Score: 1092  		Max. tile: 128  		Total moves: #120  		Max. depth: 20
+	#35 	Score: 1836  		Max. tile: 128  		Total moves: #201  		Max. depth: 20
+	#36 	Score: 1792  		Max. tile: 128  		Total moves: #212  		Max. depth: 20
+	#37 	Score: 1228  		Max. tile: 128  		Total moves: #152  		Max. depth: 20
+	#38 	Score: 1144  		Max. tile: 128  		Total moves: #134  		Max. depth: 20
+	#39 	Score: 2328  		Max. tile: 256  		Total moves: #245  		Max. depth: 20
+	#40 	Score: 3352  		Max. tile: 256  		Total moves: #296  		Max. depth: 20
+	#41 	Score: 1436  		Max. tile: 128  		Total moves: #159  		Max. depth: 20
+	#42 	Score: 904   		Max. tile: 64   		Total moves: #129  		Max. depth: 20
+	#43 	Score: 1660  		Max. tile: 128  		Total moves: #181  		Max. depth: 20
+	#44 	Score: 648   		Max. tile: 64   		Total moves: #96   		Max. depth: 20
+	#45 	Score: 1448  		Max. tile: 128  		Total moves: #174  		Max. depth: 20
+	#46 	Score: 1080  		Max. tile: 128  		Total moves: #132  		Max. depth: 20
+	#47 	Score: 1348  		Max. tile: 128  		Total moves: #155  		Max. depth: 20
+	#48 	Score: 2028  		Max. tile: 128  		Total moves: #208  		Max. depth: 20
+	#49 	Score: 3332  		Max. tile: 256  		Total moves: #305  		Max. depth: 20
+	#50 	Score: 1464  		Max. tile: 128  		Total moves: #168  		Max. depth: 20
+	#51 	Score: 2056  		Max. tile: 128  		Total moves: #207  		Max. depth: 20
+	#52 	Score: 1476  		Max. tile: 128  		Total moves: #176  		Max. depth: 20
+	#53 	Score: 1632  		Max. tile: 128  		Total moves: #184  		Max. depth: 20
+	#54 	Score: 3136  		Max. tile: 256  		Total moves: #280  		Max. depth: 20
+	#55 	Score: 2020  		Max. tile: 128  		Total moves: #206  		Max. depth: 20
+	#56 	Score: 2464  		Max. tile: 256  		Total moves: #240  		Max. depth: 20
+	#57 	Score: 1400  		Max. tile: 128  		Total moves: #154  		Max. depth: 20
+	#58 	Score: 1292  		Max. tile: 128  		Total moves: #145  		Max. depth: 20
+	#59 	Score: 1336  		Max. tile: 128  		Total moves: #150  		Max. depth: 20
+	#60 	Score: 2536  		Max. tile: 256  		Total moves: #233  		Max. depth: 20
+	#61 	Score: 1284  		Max. tile: 128  		Total moves: #143  		Max. depth: 20
+	#62 	Score: 2044  		Max. tile: 128  		Total moves: #213  		Max. depth: 20
+	#63 	Score: 1632  		Max. tile: 128  		Total moves: #185  		Max. depth: 20
+	#64 	Score: 1328  		Max. tile: 128  		Total moves: #155  		Max. depth: 20
+	#65 	Score: 1488  		Max. tile: 128  		Total moves: #174  		Max. depth: 20
+	#66 	Score: 2416  		Max. tile: 256  		Total moves: #224  		Max. depth: 20
+	#67 	Score: 4420  		Max. tile: 512  		Total moves: #333  		Max. depth: 20
+	#68 	Score: 2856  		Max. tile: 256  		Total moves: #263  		Max. depth: 20
+	#69 	Score: 1440  		Max. tile: 128  		Total moves: #166  		Max. depth: 20
+	#70 	Score: 1452  		Max. tile: 128  		Total moves: #159  		Max. depth: 20
+	#71 	Score: 1208  		Max. tile: 128  		Total moves: #151  		Max. depth: 20
+	#72 	Score: 1128  		Max. tile: 128  		Total moves: #132  		Max. depth: 20
+	#73 	Score: 1164  		Max. tile: 128  		Total moves: #138  		Max. depth: 20
+	#74 	Score: 1460  		Max. tile: 128  		Total moves: #168  		Max. depth: 20
+	#75 	Score: 2232  		Max. tile: 256  		Total moves: #208  		Max. depth: 20
+	#76 	Score: 1448  		Max. tile: 128  		Total moves: #168  		Max. depth: 20
+	#77 	Score: 1196  		Max. tile: 128  		Total moves: #144  		Max. depth: 20
+	#78 	Score: 1416  		Max. tile: 128  		Total moves: #163  		Max. depth: 20
+	#79 	Score: 1524  		Max. tile: 128  		Total moves: #182  		Max. depth: 20
+	#80 	Score: 1496  		Max. tile: 128  		Total moves: #185  		Max. depth: 20
+	#81 	Score: 3316  		Max. tile: 256  		Total moves: #302  		Max. depth: 20
+	#82 	Score: 2248  		Max. tile: 256  		Total moves: #212  		Max. depth: 20
+	#83 	Score: 1340  		Max. tile: 128  		Total moves: #152  		Max. depth: 20
+	#84 	Score: 2584  		Max. tile: 256  		Total moves: #243  		Max. depth: 20
+	#85 	Score: 1256  		Max. tile: 128  		Total moves: #146  		Max. depth: 20
+	#86 	Score: 1828  		Max. tile: 128  		Total moves: #192  		Max. depth: 20
+	#87 	Score: 2156  		Max. tile: 256  		Total moves: #195  		Max. depth: 20
+	#88 	Score: 2504  		Max. tile: 256  		Total moves: #234  		Max. depth: 20
+	#89 	Score: 1320  		Max. tile: 128  		Total moves: #146  		Max. depth: 20
+	#90 	Score: 2024  		Max. tile: 256  		Total moves: #193  		Max. depth: 20
+	#91 	Score: 1740  		Max. tile: 128  		Total moves: #175  		Max. depth: 20
+	#92 	Score: 2468  		Max. tile: 256  		Total moves: #227  		Max. depth: 20
+	#93 	Score: 3104  		Max. tile: 256  		Total moves: #300  		Max. depth: 20
+	#94 	Score: 2016  		Max. tile: 128  		Total moves: #198  		Max. depth: 20
+	#95 	Score: 1544  		Max. tile: 128  		Total moves: #168  		Max. depth: 20
+	#96 	Score: 1516  		Max. tile: 128  		Total moves: #158  		Max. depth: 20
+	#97 	Score: 1012  		Max. tile: 64   		Total moves: #143  		Max. depth: 20
+	#98 	Score: 752   		Max. tile: 64   		Total moves: #115  		Max. depth: 20
+	#99 	Score: 608   		Max. tile: 64   		Total moves: #93   		Max. depth: 20
+	#100	Score: 1472  		Max. tile: 128  		Total moves: #158  		Max. depth: 20
+
+	(*)		Avg. score: 1751  	Most freq. tile: 128  	Avg. moves: #183  		Avg. depth: 20
+	(*)		Avg. time: 00:00:0.69250  (2.66 moves/s)
+
+Top tiles:
+	1.	Tile 512 was reached 1 times (1.00%)
+	2.	Tile 256 was reached 26 times (26.00%)
+	3.	Tile 128 was reached 64 times (64.00%)
+	4.	Tile 64 was reached 9 times (9.00%)
+
+Total time: 00:01:9.250

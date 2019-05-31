@@ -1,0 +1,30 @@
+######################################################################
+##### MINIMAX ########################################################
+######################################################################
+
+-----------------------------------------------------------------
+Parameters:
+	Max. moves: 2000
+
+Final stats:
+	#1  	Score: 10508 		Max. tile: 1024 		Total moves: #626  		Max. depth: 3
+	#2  	Score: 5696  		Max. tile: 512  		Total moves: #407  		Max. depth: 3
+	#3  	Score: 10560 		Max. tile: 1024 		Total moves: #647  		Max. depth: 3
+	#4  	Score: 5580  		Max. tile: 512  		Total moves: #401  		Max. depth: 3
+	#5  	Score: 7352  		Max. tile: 512  		Total moves: #520  		Max. depth: 3
+	#6  	Score: 6372  		Max. tile: 512  		Total moves: #442  		Max. depth: 3
+	#7  	Score: 5928  		Max. tile: 512  		Total moves: #419  		Max. depth: 3
+	#8  	Score: 3348  		Max. tile: 256  		Total moves: #284  		Max. depth: 3
+	#9  	Score: 1404  		Max. tile: 128  		Total moves: #154  		Max. depth: 3
+	#10 	Score: 7176  		Max. tile: 512  		Total moves: #517  		Max. depth: 3
+
+	(*)		Avg. score: 6392  	Most freq. tile: 512  	Avg. moves: #441  		Avg. depth: 3
+	(*)		Avg. time: 00:00:7.83486
+
+Top tiles:
+	1.	Tile 1024 was reached 2 times (20.00%)
+	2.	Tile 512 was reached 6 times (60.00%)
+	3.	Tile 256 was reached 1 times (10.00%)
+	4.	Tile 128 was reached 1 times (10.00%)
+
+Total time: 00:01:18.349

@@ -1,0 +1,51 @@
+######################################################################
+##### MAXIMIZATION ###################################################
+######################################################################
+
+----------------------------------------------------------------------
+Parameters:
+	Max. moves: 2000
+
+Final stats:
+	#1  	Score: 7140  		Max. tile: 512  		Total moves: #605  		Max. depth: 3
+	#2  	Score: 14416 		Max. tile: 1024 		Total moves: #985  		Max. depth: 3
+	#3  	Score: 10516 		Max. tile: 1024 		Total moves: #787  		Max. depth: 3
+	#4  	Score: 12088 		Max. tile: 1024 		Total moves: #961  		Max. depth: 3
+	#5  	Score: 10752 		Max. tile: 1024 		Total moves: #772  		Max. depth: 3
+	#6  	Score: 6740  		Max. tile: 512  		Total moves: #631  		Max. depth: 3
+	#7  	Score: 7120  		Max. tile: 512  		Total moves: #579  		Max. depth: 3
+	#8  	Score: 14520 		Max. tile: 1024 		Total moves: #1004 		Max. depth: 3
+	#9  	Score: 10324 		Max. tile: 1024 		Total moves: #703  		Max. depth: 3
+	#10 	Score: 12660 		Max. tile: 1024 		Total moves: #933  		Max. depth: 3
+
+	(*)		Avg. score: 10627 	Most freq. tile: 1024 	Avg. moves: #796  		Avg. depth: 3
+	(*)		Avg. time: 00:00:5.22773
+
+Top tiles:
+	1.	Tile 1024 was reached 7 times (70.00%)
+	2.	Tile 512 was reached 3 times (30.00%)
+
+Total time: 00:00:52.277
+
+
+
+-----------------------------------------------------------------
+Parameters:
+	Max. moves: 2000
+
+Final stats:
+	#1  	Score: 25516 		Max. tile: 2048 		Total moves: #1654 		Max. depth: 5
+	#2  	Score: 11604 		Max. tile: 1024 		Total moves: #814  		Max. depth: 5
+	#3  	Score: 15344 		Max. tile: 1024 		Total moves: #1037 		Max. depth: 5
+	#4  	Score: 16320 		Max. tile: 1024 		Total moves: #2000 		Max. depth: 5
+	#5  	Score: 7180  		Max. tile: 512  		Total moves: #583  		Max. depth: 5
+
+	(*)		Avg. score: 15192 	Most freq. tile: 1024 	Avg. moves: #1217 		Avg. depth: 5
+	(*)		Avg. time: 00:00:55.98276
+
+Top tiles:
+	1.	Tile 2048 was reached 1 times (20.00%)
+	2.	Tile 1024 was reached 3 times (60.00%)
+	3.	Tile 512 was reached 1 times (20.00%)
+
+Total time: 00:04:39.914
