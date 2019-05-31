@@ -15,7 +15,7 @@ AI strategies to beat [2048](https://play2048.co) (game)
 - [ ] Deep Reinforcement Learning
 
 
-## Heuristics:
+## Heuristics
 
 - Monotonicity
 - Smoothness
