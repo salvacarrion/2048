@@ -2,6 +2,7 @@
 
 AI strategies to beat [2048](https://play2048.co) (game)
 
+![2048 game](images/2048.jpg)
 
 ## Implemented strategies:
 
