@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "playbook-2048"
+version = "0.1.0"
+description = "A didactic catalog of strategies (search, optimization, ML, RL) for playing 2048."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.20"]
+
+[project.optional-dependencies]
+browser = ["websocket-client"]   # drive the live game in Chrome
+deep = ["torch"]                  # deep-RL strategies (DQN, policy gradient)
+tune = ["cma"]                    # CMA-ES weight tuning
+dev = ["pytest"]
+
+[project.scripts]
+playbook = "playbook.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["playbook*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
