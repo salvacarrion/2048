@@ -40,6 +40,12 @@ class EvalReport:
         counts = Counter(g.max_tile for g in self.games)
         return dict(sorted(counts.items(), key=lambda kv: kv[0], reverse=True))
 
+    def reach_rate(self, target=2048):
+        """Fraction of games whose top tile was at least ``target`` (e.g. 2048)."""
+        if not self.games:
+            return 0.0
+        return sum(g.max_tile >= target for g in self.games) / len(self.games)
+
     def summary(self):
         n = len(self.games)
         lines = [
