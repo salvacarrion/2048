@@ -19,11 +19,9 @@ class MaximizationStrategy(SearchStrategy):
         return best if best != NEG_INF else self.heuristic(board)
 
     def select_move(self, board, legal):
-        best_move, best = None, NEG_INF
+        scores = {}
         for move in sorted(legal):
             child, _, _ = simulate_move(board, move)
             add_random_tile(child, self.rng)
-            score = self._maximize(child, self.depth)
-            if best_move is None or score > best:
-                best_move, best = move, score
-        return best_move
+            scores[move] = self._maximize(child, self.depth)
+        return self._pick(scores)

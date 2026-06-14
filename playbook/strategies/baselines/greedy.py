@@ -18,10 +18,11 @@ class GreedyStrategy(Strategy):
         self.rng = random.Random(seed)
 
     def select_move(self, board, legal):
+        self.last_scores = {move: move_reward(board, move) for move in sorted(legal)}
         best_move = self.rng.choice(sorted(legal))
         best_reward = -1
         for move in sorted(legal):
-            reward = move_reward(board, move)
+            reward = self.last_scores[move]
             if reward > best_reward:
                 best_reward = reward
                 best_move = move

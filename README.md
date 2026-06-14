@@ -1,4 +1,4 @@
-# Playbook — strategies for 2048
+# Playbook: strategies for 2048
 
 ![python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![strategies](https://img.shields.io/badge/strategies-12-orange)
@@ -6,18 +6,19 @@
 
 ![2048 game](images/2048.jpg)
 
-A didactic catalog of AI strategies for [2048](https://play2048.co), built so you can **try a new idea and benchmark it with a single command** — without reading the whole codebase. Every strategy is a small, self-contained file grouped by technique into recognizable "chapters": baselines, search, optimization and (reinforcement) learning. A fast in-memory simulator drives training and evaluation; the exact same strategy can also play a live game in Chrome over the DevTools protocol.
+A didactic catalog of AI strategies for [2048](https://play2048.co), built so you can **try a new idea and benchmark it with a single command**, without reading the whole codebase. Every strategy is a small, self-contained file grouped by technique into recognizable "chapters": baselines, search, optimization and (reinforcement) learning. A fast in-memory simulator drives training and evaluation; the exact same strategy can also play a live game in Chrome over the DevTools protocol.
 
 > Clarity over raw performance. The point is to make it obvious *where* an idea lives and *how* to add your own.
 
 ## Highlights
 
-- **One interface for every player** — `select_move(board, legal) -> Move`. That is the whole contract.
-- **Strategies grouped by technique** — search (minimax, expectimax, MCTS…), optimization (genetic), reinforcement learning (n-tuple TD, DQN), supervised (imitation).
-- **Reusable heuristics** — monotonicity, corner gradients, free tiles, merges… combined with explicit weights, no hidden globals.
+- **One interface for every player**: `select_move(board, legal) -> Move`. That is the whole contract.
+- **Strategies grouped by technique**: search (minimax, expectimax, MCTS…), optimization (genetic), reinforcement learning (n-tuple TD, DQN), supervised (imitation).
+- **Reusable heuristics**: monotonicity, corner gradients, free tiles, merges… combined with explicit weights, no hidden globals.
 - **Simulator *or* live browser** behind the same `Env` API, so a strategy you trained offline can play the real game unchanged.
-- **Reproducible benchmarks** — one script runs any subset of strategies over the same seeded games and prints a table (and a Markdown table for this README).
-- **Pinned mechanics** — the board engine is frozen against a golden fixture of 1600 transitions, so refactors can't silently change the game.
+- **Watch it play and learn from it**: step through a live game move by move (`--delay` / `--step`) while the strategy shows the score it gave each candidate move (`--explain`).
+- **Reproducible benchmarks**: one script runs any subset of strategies over the same seeded games and prints a table (and a Markdown table for this README).
+- **Pinned mechanics**: the board engine is frozen against a golden fixture of 1600 transitions, so refactors can't silently change the game.
 
 ## Install
 
@@ -46,20 +47,55 @@ To play the live game, start Chrome with remote debugging and open the board in 
 # then navigate to https://play2048.co
 ```
 
+## Watch it play and learn from it
+
+Watching a strong player move by move is the fastest way to build intuition. The `play` command renders every move; pace it and it explains itself: every search player (plus `greedy` and `ntuple`) reports the score it gave each candidate move, so you can see the ranking behind its choice:
+
+```bash
+# Slow it down in the terminal simulator and see *why* each move is chosen
+python -m playbook play --strategy expectimax --depth 3 --delay 0.4
+
+# Step through one move at a time (press Enter to advance)
+python -m playbook play --strategy ntuple --weights ntuple.npz --step
+
+# Live in Chrome (see the setup above) - the explanation prints in the terminal
+python -m playbook play --strategy mcts --env browser --delay 0.3
+```
+
+```text
+move #160 [UP]  score=2048
+       UP       25071.7  <-- chosen
+     LEFT       24763.0
+    RIGHT       23181.6
+     DOWN       13798.8
+    32    256     32      2
+     2     16      8      0
+     8      2      4      0
+     4      0      0      4
+```
+
+| Flag | Effect |
+|---|---|
+| `--delay <seconds>` | pause between moves so you can follow along |
+| `--step` | wait for Enter before each move |
+| `--explain` / `--no-explain` | show or hide the per-move scores (on by default) |
+
+Each strategy's number is on its own scale: immediate points for `greedy`, the heuristic value of the look-ahead for the search players, the learned `reward + V(afterstate)` for `ntuple`. Read the *ranking*, not the absolute value.
+
 ## Strategies
 
 | Strategy | Family | Idea | Reaches 2048? |
 |---|---|---|:--:|
-| `random` | baseline | pick any legal move — the floor everything beats | ✗ |
+| `random` | baseline | pick any legal move (the floor everything beats) | ✗ |
 | `greedy` | baseline | the move with the best immediate score | ✗ |
 | `manual` | baseline | you type the moves (for debugging / playing) | depends on you |
 | `maximization` | search | look ahead, assume an average random spawn | ✓ |
 | `minimax` | search | α-β, treats the spawn as an adversary | ✓ |
-| `expectimax` | search | α-β over the *real* 2/4 spawn distribution — the classic strong baseline | ✓✓ |
+| `expectimax` | search | α-β over the *real* 2/4 spawn distribution (the classic strong baseline) | ✓✓ |
 | `mcts` | search | random rollouts from each candidate move | ✓ |
 | `genetic` | optimization | evolve the weights of a heuristic player | ✓ |
 | `ntuple` | reinforcement (TD) | learn a value function over tile patterns, no neural net | ✓✓✓ |
-| `dqn` | reinforcement (deep) | deep Q-network *(scaffold — interface ready, training is your exercise)* | — |
+| `dqn` | reinforcement (deep) | deep Q-network *(scaffold: interface ready, training is your exercise)* | — |
 | `qlearning` | reinforcement (tabular) | classic tabular Q-learning *(scaffold)* | — |
 | `imitation` | supervised | learn from a teacher's games *(scaffold)* | — |
 
@@ -67,24 +103,25 @@ Search strategies take a `--depth` (and `--runs` for MCTS) and an injectable `--
 
 ## Results
 
-Reproduce on your machine — every strategy plays the same seeded games:
+Reproduce on your machine. Every strategy plays the same seeded games:
 
 ```bash
 python benchmark.py --strategies all --games 50 --markdown
 ```
 
-Example run (20 games, seed 0; search at depth 3; `ntuple` trained 20k episodes). Numbers vary by machine and seed — regenerate with the command above.
+Example run (50 games, seed 0; tree search at depth 3, `mcts` at 20 runs × depth 20; `ntuple` is the bundled net, trained 15,000 episodes). Numbers vary by machine and seed; regenerate with the command above.
 
-| Strategy | Avg score | Best | 2048 rate | Top tile | Moves/s |
-|---|--:|--:|--:|--:|--:|
-| `ntuple` (trained) | 41,000 | 73,000 | 84% | 4,096 | 4,700 |
-| `expectimax` | 25,000 | 47,000 | 62% | 2,048 | 40 |
-| `mcts` | 13,000 | 22,000 | 14% | 2,048 | 90 |
-| `genetic` | 9,000 | 16,000 | 4% | 1,024 | 3,600 |
-| `greedy` | 4,000 | 6,400 | 0% | 512 | 6,400 |
-| `random` | 1,000 | 1,500 | 0% | 128 | 6,600 |
+| Strategy | Avg score | Best | 2048 rate | Top tile | Avg moves | Moves/s |
+|---|--:|--:|--:|--:|--:|--:|
+| `ntuple` (trained) | 26,533 | 73,824 | 54% | 4,096 | 1,413 | 3,561 |
+| `mcts` | 12,406 | 26,972 | 6% | 2,048 | 731 | 17 |
+| `expectimax` | 10,653 | 25,624 | 10% | 2,048 | 658 | 52 |
+| `maximization` | 9,389 | 16,500 | 0% | 1,024 | 591 | 176 |
+| `minimax` | 6,843 | 16,224 | 0% | 1,024 | 469 | 322 |
+| `greedy` | 3,354 | 7,780 | 0% | 512 | 277 | 6,522 |
+| `random` | 1,078 | 2,740 | 0% | 256 | 117 | 7,333 |
 
-Read the table as two questions: *how strong* (avg/best score, 2048 rate, top tile) and *how cheap* (moves/s). `greedy` and `random` are essentially free but plateau early; `expectimax` is strong but pays per move for its lookahead; `ntuple` does its expensive work once during training and then plays both strongly and fast.
+Read the table as two questions: *how strong* (avg/best score, 2048 rate, top tile) and *how cheap* (moves/s). `greedy` and `random` are essentially free but plateau early; the search players trade speed for strength: `expectimax` is principled but pays per move for its lookahead, and `mcts` (random rollouts scored by the points they earn) is the strongest searcher here but the slowest. `ntuple` does its expensive work once during training, then plays both strongest *and* fast.
 
 ## How it works
 
@@ -107,7 +144,7 @@ playbook/
 benchmark.py    the Results table above
 ```
 
-Boards are 4×4 numpy arrays of log2 exponents (`0`=empty, `1`=tile 2, …, `11`=2048). The `Env` is the seam that lets one strategy run against the fast simulator or a live Chrome tab without knowing which. Search strategies receive a heuristic and never know which one; learning strategies add a `Trainable` mixin (`train` / `observe` / `save` / `load`) and learn on *afterstates* — the board after the slide+merge but before the random spawn.
+Boards are 4×4 numpy arrays of log2 exponents (`0`=empty, `1`=tile 2, …, `11`=2048). The `Env` is the seam that lets one strategy run against the fast simulator or a live Chrome tab without knowing which. Search strategies receive a heuristic and never know which one; learning strategies add a `Trainable` mixin (`train` / `observe` / `save` / `load`) and learn on *afterstates* (the board after the slide+merge, before the random spawn).
 
 ## Create your own strategy
 
@@ -125,13 +162,13 @@ Adding an idea is three steps and never touches the engine:
            return max(legal)   # your idea here
    ```
 
-2. **Register a name** — one line in [`registry.py`](playbook/registry.py) (use a local import so optional deps load only when requested):
+2. **Register a name**: one line in [`registry.py`](playbook/registry.py) (use a local import so optional deps load only when requested):
 
    ```python
    reg["corner"] = lambda **c: CornerStrategy(**c)
    ```
 
-3. **Run it** — `python -m playbook eval --strategy corner --games 20`, then add it to the benchmark and compare.
+3. **Run it**: `python -m playbook eval --strategy corner --games 20`, then add it to the benchmark and compare.
 
 If your strategy *learns*, also mix in `Trainable` and implement `observe` / `train` / `save` / `load`; the `ntuple` agent in [`strategies/learning/reinforcement/ntuple/`](playbook/strategies/learning/reinforcement/ntuple/ntuple.py) is a complete worked example. Each family folder has a `README.md` describing the technique and what to keep in mind.
 
@@ -145,7 +182,7 @@ The board mechanics are pinned to the original game by a golden fixture (`tests/
 
 ## References
 
-- [What is the optimal algorithm for the game 2048?](https://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048) — the canonical discussion of expectimax + heuristics.
-- Szubert & Jaśkowski, *Temporal Difference Learning of N-Tuple Networks for the Game 2048* (2014) — the basis for the `ntuple` strategy.
-- [nneonneo/2048-ai](https://github.com/nneonneo/2048-ai) — a fast C++ expectimax implementation.
+- [What is the optimal algorithm for the game 2048?](https://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048): the canonical discussion of expectimax + heuristics.
+- Szubert & Jaśkowski, *Temporal Difference Learning of N-Tuple Networks for the Game 2048* (2014): the basis for the `ntuple` strategy.
+- [nneonneo/2048-ai](https://github.com/nneonneo/2048-ai): a fast C++ expectimax implementation.
 - [How an AI crushed all human 2048 records](http://www.randalolson.com/2015/04/27/artificial-intelligence-has-crushed-all-human-records-in-2048-heres-how-the-ai-pulled-it-off/) and [the MDP view of 2048](https://jdlm.info/articles/2018/03/18/markov-decision-process-2048.html).

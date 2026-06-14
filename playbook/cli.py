@@ -56,7 +56,8 @@ def cmd_play(args):
     strategy = make_strategy(args.strategy, **_strategy_config(args))
     env = _env_factory(args)()
     result = play_game(strategy, env, max_moves=args.max_moves,
-                       render_every=args.render_every or 1)
+                       render_every=args.render_every or 1,
+                       delay=args.delay, step=args.step, explain=args.explain)
     print(f"\nGame over — score {result.score}, top tile {result.max_tile}, "
           f"{result.moves} moves")
 
@@ -101,7 +102,14 @@ def build_parser():
     sp.set_defaults(func=cmd_compare)
 
     sp = sub.add_parser("play", help="play a single (optionally live) game")
-    add_common(sp); add_strategy_knobs(sp); sp.set_defaults(func=cmd_play)
+    add_common(sp); add_strategy_knobs(sp)
+    sp.add_argument("--delay", type=float, default=0.0,
+                    help="seconds to pause between moves (watch it play)")
+    sp.add_argument("--step", action="store_true",
+                    help="pause for Enter before each move")
+    sp.add_argument("--explain", action=argparse.BooleanOptionalAction, default=True,
+                    help="show the score given to each candidate move (default: on)")
+    sp.set_defaults(func=cmd_play)
 
     sp = sub.add_parser("train", help="train a learning strategy")
     add_strategy_knobs(sp)

@@ -39,10 +39,8 @@ class MinimaxStrategy(SearchStrategy):
         return worst
 
     def select_move(self, board, legal):
-        best_move, best = None, NEG_INF
+        scores = {}
         for move in sorted(legal):
             child, _, _ = simulate_move(board, move)
-            score = self._minimize(child, self.depth, NEG_INF, POS_INF)
-            if best_move is None or score > best:
-                best_move, best = move, score
-        return best_move
+            scores[move] = self._minimize(child, self.depth, NEG_INF, POS_INF)
+        return self._pick(scores)

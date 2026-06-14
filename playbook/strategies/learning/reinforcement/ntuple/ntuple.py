@@ -93,8 +93,18 @@ class NTupleStrategy(Strategy, Trainable):
         return best[1], best[2], best[3]
 
     def select_move(self, board, legal):
-        move, _, _ = self._best(board, legal)
-        return move
+        # Greedy by reward + V(afterstate) — the same ranking _best uses while
+        # training — recording each move's value so the live `play` view (and
+        # --explain) can show why this move won.
+        scores, best = {}, None  # best = (value, move)
+        for move in sorted(legal):
+            after, _, reward = simulate_move(board, move)
+            value = reward + self.net.value(after)
+            scores[move] = value
+            if best is None or value > best[0]:
+                best = (value, move)
+        self.last_scores = scores
+        return best[1]
 
     # -- learning ------------------------------------------------------------
     def observe(self, transition):

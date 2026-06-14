@@ -13,6 +13,13 @@ class Strategy(ABC):
     #: short, human-friendly name (used in reports and the registry)
     name = "strategy"
 
+    #: Per-move scores recorded by the most recent :meth:`select_move`, as a
+    #: ``{Move: float}`` mapping — the *why* behind the chosen move, surfaced by
+    #: the live ``play`` view (``--explain``). Strategies that can explain
+    #: themselves (search, ``greedy``, ``ntuple``) fill this in; ``None`` means
+    #: no explanation is available (e.g. ``random``).
+    last_scores = None
+
     @abstractmethod
     def select_move(self, board, legal):
         """Return the chosen :class:`~playbook.game.board.Move`.

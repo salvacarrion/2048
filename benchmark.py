@@ -9,20 +9,32 @@ the 2048 tile was reached, the highest tile seen, and speed.
     python benchmark.py                                   # the default lineup
     python benchmark.py --strategies all --games 50
     python benchmark.py --strategies expectimax,mcts --depth 4 --games 20
-    python benchmark.py --strategies ntuple --ntuple-weights ntuple.npz
+    python benchmark.py --strategies mcts --mcts-runs 60 --mcts-depth 40
+    python benchmark.py --strategies ntuple --ntuple-weights mynet.npz
+    python benchmark.py --strategies ntuple --ntuple-untrained   # the raw, unlearned net
     python benchmark.py --markdown                        # also print a GitHub table
 
-Games are seeded from ``--seed`` so every strategy faces the same starting
-boards and the numbers are reproducible run to run.
+`ntuple` loads a bundled, pre-trained network by default (so it shows what the
+learner can actually do, not an untrained net that just mimics `greedy`).
+
+Both the games *and* each strategy's own RNG are seeded from ``--seed``, so every
+strategy faces the same starting boards and the numbers are reproducible run to
+run.
 """
 import argparse
 import itertools
 import platform
 import time
+from pathlib import Path
 
 from playbook.evaluation import evaluate
 from playbook.game import SimEnv
 from playbook.registry import available
+
+# The pre-trained n-tuple network shipped with the repo (see the README for how
+# it was trained). Loaded by default so `ntuple` benchmarks as a *trained* agent.
+DEFAULT_NTUPLE_WEIGHTS = (Path(__file__).resolve().parent / "playbook" / "strategies"
+                          / "learning" / "reinforcement" / "ntuple" / "pretrained.npz")
 
 # Default knobs per strategy when benchmarking toward 2048. Search strategies
 # get a depth that is a sensible accuracy/speed trade-off; `mcts` gets enough
@@ -33,8 +45,8 @@ PROFILES = {
     "maximization": {"depth": 3},
     "minimax": {"depth": 3},
     "expectimax": {"depth": 3},
-    "mcts": {"runs": 40, "depth": 30},
-    "ntuple": {},   # pass --ntuple-weights to load a trained network
+    "mcts": {"runs": 20, "depth": 20},
+    "ntuple": {},   # weights are resolved in _config (bundled net by default)
     "genetic": {},
 }
 
@@ -59,10 +71,21 @@ _TREE_SEARCH = {"maximization", "minimax", "expectimax"}
 
 def _config(name, args):
     cfg = dict(PROFILES.get(name, {}))
+    cfg["seed"] = args.seed   # seed every strategy's RNG, not just the games
     if args.depth is not None and name in _TREE_SEARCH:
         cfg["depth"] = args.depth
-    if name == "ntuple" and args.ntuple_weights:
-        cfg = {"weights": args.ntuple_weights}
+    if name == "mcts":
+        if args.mcts_runs is not None:
+            cfg["runs"] = args.mcts_runs
+        if args.mcts_depth is not None:
+            cfg["depth"] = args.mcts_depth
+    if name == "ntuple":
+        if args.ntuple_untrained:
+            cfg.pop("weights", None)            # play the raw, unlearned net on purpose
+        elif args.ntuple_weights:
+            cfg["weights"] = args.ntuple_weights
+        else:
+            cfg["weights"] = str(DEFAULT_NTUPLE_WEIGHTS)   # the bundled trained net
     return cfg
 
 
@@ -135,9 +158,16 @@ def build_parser():
     p.add_argument("--max-moves", dest="max_moves", type=int, default=100_000)
     p.add_argument("--seed", type=int, default=0, help="base seed (game i uses seed+i)")
     p.add_argument("--target", type=int, default=2048, help="win-tile for the reach rate")
-    p.add_argument("--depth", type=int, default=None, help="override search depth")
+    p.add_argument("--depth", type=int, default=None,
+                   help="override tree-search depth (maximization/minimax/expectimax)")
+    p.add_argument("--mcts-runs", dest="mcts_runs", type=int, default=None,
+                   help="rollouts per move for mcts (default %d)" % PROFILES["mcts"]["runs"])
+    p.add_argument("--mcts-depth", dest="mcts_depth", type=int, default=None,
+                   help="rollout length for mcts (default %d)" % PROFILES["mcts"]["depth"])
     p.add_argument("--ntuple-weights", dest="ntuple_weights", default=None,
-                   help="path to a trained n-tuple network (.npz)")
+                   help="path to a trained n-tuple network (.npz); overrides the bundled one")
+    p.add_argument("--ntuple-untrained", dest="ntuple_untrained", action="store_true",
+                   help="benchmark the n-tuple net untrained (plays like greedy)")
     p.add_argument("--markdown", action="store_true", help="also print a README table")
     return p
 

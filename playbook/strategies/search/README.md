@@ -9,7 +9,7 @@ simulator) and differ only in how they treat the random tile spawn.
 | `maximization` | one sampled random tile between plies | simplest lookahead |
 | `minimax` | an **adversary** placing the worst tile (α-β pruned) | pessimistic |
 | `expectimax` | **chance**: averages over every empty cell × {2 @ 0.9, 4 @ 0.1} | the principled choice for 2048 |
-| `mcts` | random rollouts (`runs` per move, length `depth`) | Monte-Carlo, no heuristic of the tree, only of the leaves |
+| `mcts` | random rollouts (`runs` per move, length `depth`) | Monte-Carlo; scores each rollout by the points it earns + the leaf heuristic |
 
 All inject their heuristic, so you can swap evaluation ideas without touching the
 search:
@@ -25,3 +25,8 @@ ExpectimaxStrategy(heuristic=get_heuristic("gradient"), depth=3)
   distribution. The original mistakenly spawned exponents 2 and 4.
 - `minimax` drops a deterministic 2 in the worst cell instead of a random tile,
   so the search is reproducible.
+- `mcts` scores a rollout by the **points it earns** along the way (plus the leaf
+  heuristic), not by the heuristic of the final board alone. A long random tail
+  always ends in a near-dead board, so its heuristic barely depends on the first
+  move; the realized score does. This is what lifts `mcts` from ~greedy level to
+  comfortably above the other search players.

@@ -18,3 +18,15 @@ class SearchStrategy(Strategy):
         self.heuristic = heuristic if heuristic is not None else default_heuristic()
         self.depth = depth
         self.rng = random.Random(seed)
+
+    def _pick(self, scores):
+        """Record the per-move ``{Move: score}`` (for the explainable ``play``
+        view) and return the best move. Ties break toward the lower move index,
+        matching the original deterministic selection.
+        """
+        self.last_scores = scores
+        best_move, best = None, NEG_INF
+        for move in sorted(scores):
+            if best_move is None or scores[move] > best:
+                best_move, best = move, scores[move]
+        return best_move
