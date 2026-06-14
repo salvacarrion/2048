@@ -9,7 +9,7 @@ except ImportError:
 
 class ChromeDebuggerControl(object):
     """ Control Chrome using the debugging socket.
-    Chrome must be launched using the --remote-debugging-port=<port> option for this to work! """
+    Chrome must be launched using the --remote-debugging-port=<port> --remote-allow-origins="*" options for this to work! """
 
     def __init__(self, port):
         if websocket is None:
@@ -18,25 +18,29 @@ class ChromeDebuggerControl(object):
 
         # Obtain the list of pages
         pages = json.loads(urllib.request.urlopen('http://localhost:%d/json/list' % port).read())
-        if len(pages) == 0:
-            raise Exception("No pages to attach to!")
-        elif len(pages) == 1:
-            page = pages[0]
-        else:
-            print("Select a page to attach to:")
-            for i, page in enumerate(pages):
-                if page['title'].strip() == '2048':
-                    page = pages[i]
-                    print("2048 selected!")
-                    break
-                #print("%d) %s" % (i+1, page['title']))
-            # while 1:
-            #     try:
-            #         pageidx = int(input("Selection? "))
-            #         page = pages[pageidx-1]
-            #         break
-            #     except Exception as e:
-            #         print("Invalid selection:"  + str(e))
+        tab_pages = [p for p in pages if p.get('type') == 'page']
+
+        if len(tab_pages) == 0:
+            raise Exception("No active browser tabs found! Make sure Chrome is open with at least one tab.")
+
+        target_page = None
+        for p in tab_pages:
+            title = p.get('title', '')
+            url = p.get('url', '')
+            if '2048' in title or '2048' in url:
+                target_page = p
+                print(f"Attached to 2048 page: '{title}' ({url})")
+                break
+
+        if target_page is None:
+            open_tabs_str = "\n".join([f" - '{p.get('title')}' ({p.get('url')})" for p in tab_pages])
+            raise Exception(
+                "Could not find any tab with '2048' in the title or URL.\n"
+                f"Currently open tabs:\n{open_tabs_str}\n"
+                "Please navigate to https://classic.play2048.co in your debug Chrome window."
+            )
+
+        page = target_page
 
         # Configure debugging websocket
         wsurl = page['webSocketDebuggerUrl']

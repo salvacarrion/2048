@@ -84,7 +84,7 @@ class SimEnv(Env):
 
 
 class BrowserEnv(Env):
-    """Drives the live game at play2048.co through Chrome's debugger.
+    """Drives the live game at classic.play2048.co through Chrome's debugger.
 
     Thin adapter over :class:`Fast2048Control`; the heavy lifting (reading the
     grid, executing moves, UDLR->URDL remapping) lives there.

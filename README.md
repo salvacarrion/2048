@@ -6,7 +6,7 @@
 
 ![2048 game](images/2048.jpg)
 
-A didactic catalog of AI strategies for [2048](https://play2048.co), built so you can **try a new idea and benchmark it with a single command**, without reading the whole codebase. Every strategy is a small, self-contained file grouped by technique into recognizable "chapters": baselines, search, optimization and (reinforcement) learning. A fast in-memory simulator drives training and evaluation; the exact same strategy can also play a live game in Chrome over the DevTools protocol.
+A didactic catalog of AI strategies for [2048](https://classic.play2048.co), built so you can **try a new idea and benchmark it with a single command**, without reading the whole codebase. Every strategy is a small, self-contained file grouped by technique into recognizable "chapters": baselines, search, optimization and (reinforcement) learning. A fast in-memory simulator drives training and evaluation; the exact same strategy can also play a live game in Chrome over the DevTools protocol.
 
 > Clarity over raw performance. The point is to make it obvious *where* an idea lives and *how* to add your own.
 
@@ -43,8 +43,8 @@ python -m playbook play  --strategy mcts --env browser             # live, in Ch
 To play the live game, start Chrome with remote debugging and open the board in that window:
 
 ```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-# then navigate to https://play2048.co
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --remote-allow-origins="*"
+# then navigate to https://classic.play2048.co
 ```
 
 ## Watch it play and learn from it
