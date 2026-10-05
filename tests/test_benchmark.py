@@ -11,6 +11,7 @@ def _args(**overrides):
         "mcts_depth": None,
         "ntuple_weights": None,
         "ntuple_untrained": False,
+        "lookahead": 0,
     }
     values.update(overrides)
     return argparse.Namespace(**values)
@@ -44,3 +45,13 @@ def test_benchmark_can_request_untrained_ntuple():
 
     assert cfg["seed"] == 123
     assert "weights" not in cfg
+
+def test_benchmark_loads_bundled_weights_for_neural_players():
+    for name in ("dqn", "imitation", "qlearning"):
+        assert benchmark._config(name, _args())["weights"] == str(benchmark.DEFAULT_WEIGHTS[name])
+
+
+def test_benchmark_lookahead_applies_to_learned_value_players_only():
+    assert benchmark._config("dqn", _args(lookahead=1))["depth"] == 1
+    assert "depth" not in benchmark._config("imitation", _args(lookahead=1))
+    assert benchmark._label("dqn", {"depth": 1}) == "dqn (depth 1)"

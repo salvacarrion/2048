@@ -10,9 +10,16 @@ Organized by how the value function is *represented*:
 
 | Sub-family | Representation | Status |
 |---|---|---|
+| [`tabular/`](tabular/) | one entry per (abstracted) state | implemented — shows *why* tables don't scale |
 | [`ntuple/`](ntuple/) | lookup tables over cell groups | **fully worked** — learns strong play on CPU, no torch |
-| [`tabular/`](tabular/) | one entry per state | scaffold (motivates why tables don't scale) |
-| [`deep/`](deep/) | neural network (DQN, policy gradient) | scaffold + network + lazy torch |
+| [`deep/`](deep/) | neural network (DQN on afterstates) | implemented — trains on a GPU |
 
-Start with `ntuple/` — it is the canonical, lightweight RL approach for this
-game (Szubert & Jaśkowski, 2014) and the best bang for the buck.
+Read them in that order: `tabular/` is the textbook algorithm and shows where it
+breaks (a table cannot generalize, so it either aliases very different boards or
+never sees the same board twice); `ntuple/` is the canonical, lightweight fix for
+this game (Szubert & Jaśkowski, 2014) and the best bang for the buck; `deep/`
+replaces the tables with a neural network.
+
+`ntuple` and `dqn` both learn `V(afterstate)`, so both accept `--depth` to search
+a little before trusting it ([`search/lookahead.py`](../../search/lookahead.py)):
+`--depth 1` averages over every possible spawn after each move.

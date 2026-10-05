@@ -18,8 +18,9 @@ import random
 
 import numpy as np
 
-from playbook.game.board import simulate_move
+from playbook.game.board import Move, simulate_move
 from playbook.strategies.base import Strategy, Trainable
+from playbook.strategies.search.lookahead import expectimax_q
 
 MAX_EXP = 16  # tile exponents are clipped to this many distinct values
 
@@ -52,6 +53,16 @@ class NTupleNetwork:
     def value(self, board):
         return float(sum(self.tables[k][self._index(board, k)] for k in range(len(self.tuples))))
 
+    def values(self, boards):
+        """:meth:`value` of a ``(N, 4, 4)`` batch at once (numpy, no Python loop
+        over boards) -- what batched search and data collection use."""
+        if not hasattr(self, "_cells"):
+            self._cells = np.array([[i * 4 + j for i, j in t] for t in self.tuples])
+            self._strides = self.max_exp ** np.arange(self._cells.shape[1])
+        flat = np.asarray(boards, dtype=np.int64).reshape(len(boards), 16)
+        idx = (np.minimum(flat, self.max_exp - 1)[:, self._cells] * self._strides).sum(axis=2)
+        return sum(table[idx[:, k]] for k, table in enumerate(self.tables))
+
     def update(self, board, delta):
         """Distribute a value correction across the active table entries."""
         per = delta / len(self.tables)
@@ -73,9 +84,10 @@ class NTupleNetwork:
 class NTupleStrategy(Strategy, Trainable):
     name = "ntuple"
 
-    def __init__(self, tuples=None, alpha=0.1, net=None, seed=None):
+    def __init__(self, tuples=None, alpha=0.1, net=None, depth=0, seed=None):
         self.net = net if net is not None else NTupleNetwork(tuples)
         self.alpha = alpha
+        self.depth = depth   # expectimax levels on top of V when playing (0 = greedy)
         self.rng = random.Random(seed)
 
     # -- playing -------------------------------------------------------------
@@ -92,7 +104,20 @@ class NTupleStrategy(Strategy, Trainable):
                 best = (val, move, after, reward)
         return best[1], best[2], best[3]
 
+    def move_values(self, boards):
+        """``reward + V(afterstate)`` of every move (``-inf`` if illegal) for a
+        batch of boards, with ``depth`` levels of expectimax on top (see
+        :mod:`~playbook.strategies.search.lookahead`)."""
+        return expectimax_q(boards, self.net.values, self.depth)
+
+    def select_moves(self, boards):
+        return self.move_values(boards).argmax(axis=1)
+
     def select_move(self, board, legal):
+        if self.depth:
+            q = self.move_values(board[None])[0]
+            self.last_scores = {Move(m): float(q[m]) for m in legal}
+            return max(sorted(legal), key=lambda m: q[m])
         # Greedy by reward + V(afterstate) — the same ranking _best uses while
         # training — recording each move's value so the live `play` view (and
         # --explain) can show why this move won.
@@ -155,5 +180,5 @@ class NTupleStrategy(Strategy, Trainable):
         self.net.save(path)
 
     @classmethod
-    def load(cls, path):
-        return cls(net=NTupleNetwork.load(path))
+    def load(cls, path, **config):
+        return cls(net=NTupleNetwork.load(path), **config)

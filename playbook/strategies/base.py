@@ -8,6 +8,8 @@ Strategies that *learn* additionally mix in :class:`Trainable`.
 """
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 
 class Strategy(ABC):
     #: short, human-friendly name (used in reports and the registry)
@@ -28,6 +30,16 @@ class Strategy(ABC):
         of moves that actually change the board (never empty unless the game is
         over, in which case the runner stops before calling this).
         """
+
+    def select_moves(self, boards):
+        """Batched :meth:`select_move`: one move per board, as an int array.
+
+        Every board must have a legal move. The default just loops; neural
+        strategies override it to score the whole batch in one forward pass.
+        Batched game loops (e.g. collecting a teacher's demonstrations) use it.
+        """
+        from ..game.rules import legal_moves
+        return np.array([int(self.select_move(b, legal_moves(b))) for b in boards])
 
     def reset(self):
         """Hook called at the start of each game. Default: no-op."""

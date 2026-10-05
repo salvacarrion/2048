@@ -1,4 +1,5 @@
 """Every non-interactive strategy can play a game and the registry resolves them."""
+import numpy as np
 import pytest
 
 from playbook.evaluation import evaluate, play_game
@@ -58,3 +59,53 @@ def test_ntuple_save_load(tmp_path):
     loaded = make_strategy("ntuple", weights=str(path))
     board = SimEnv(seed=0).reset()
     assert np.isclose(agent.net.value(board), loaded.net.value(board))
+
+
+def test_qlearning_learns_and_round_trips(tmp_path):
+    agent = make_strategy("qlearning", seed=0)
+    agent.train(SimEnv(seed=0), episodes=30)
+    assert len(agent.q) > 0
+    path = tmp_path / "q.pkl"
+    agent.save(str(path))
+    loaded = make_strategy("qlearning", weights=str(path))
+    assert loaded.q == agent.q
+    assert play_game(loaded, SimEnv(seed=0), max_moves=50).moves > 0
+
+
+def test_dqn_trains_plays_and_round_trips(tmp_path):
+    pytest.importorskip("torch")
+    agent = make_strategy("dqn", device="cpu", seed=0, channels=8, hidden=16)
+    agent.train(episodes=4, n_envs=4, batch_size=32, learn_start=64, target_every=10)
+    path = tmp_path / "dqn.pt"
+    agent.save(str(path))
+    for depth in (0, 1):
+        loaded = make_strategy("dqn", weights=str(path), device="cpu", depth=depth)
+        result = play_game(loaded, SimEnv(seed=0), max_moves=30)
+        assert result.moves > 0 and loaded.last_scores
+    board = SimEnv(seed=0).reset()
+    assert np.allclose(agent.move_values(board[None]), loaded.move_values(board[None], depth=0))
+
+
+def test_imitation_copies_its_teacher(tmp_path):
+    pytest.importorskip("torch")
+    teacher = make_strategy("greedy")
+    agent = make_strategy("imitation", device="cpu", seed=0, channels=8, hidden=32)
+    boards, moves = agent.train(episodes=8, teacher=teacher, rounds=2, epochs=3, n_envs=4)
+    assert len(boards) == len(moves) > 0
+    path = tmp_path / "imitation.pt"
+    agent.save(str(path))
+    loaded = make_strategy("imitation", weights=str(path), device="cpu")
+    assert play_game(loaded, SimEnv(seed=0), max_moves=30).moves > 0
+
+
+def test_imitation_soft_targets_from_a_scoring_teacher():
+    from benchmark import DEFAULT_NTUPLE_WEIGHTS
+    from playbook.game.vector import VecSimEnv, expand
+    from playbook.strategies.learning.supervised.imitation import teacher_targets
+    teacher = make_strategy("ntuple", weights=str(DEFAULT_NTUPLE_WEIGHTS))
+    boards = VecSimEnv(64, seed=0).boards
+    moves, targets = teacher_targets(teacher, boards, temperature=50.0)
+    _, _, legal = expand(boards)
+    assert np.allclose(targets.sum(axis=1), 1.0)
+    assert (targets[~legal] == 0).all()
+    assert np.array_equal(targets.argmax(axis=1), moves)

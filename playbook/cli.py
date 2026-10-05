@@ -5,8 +5,10 @@
     python -m playbook compare --strategies random,greedy,expectimax --games 20
     python -m playbook play     --strategy mcts --env browser
     python -m playbook train    --strategy ntuple --episodes 20000 --save ntuple.npz
+    python -m playbook train    --strategy imitation --teacher dqn --teacher-weights dqn.pt
 """
 import argparse
+import inspect
 
 from .evaluation.compare import compare
 from .evaluation.evaluate import evaluate
@@ -66,7 +68,16 @@ def cmd_train(args):
     strategy = make_strategy(args.strategy, **_strategy_config(args))
     if not hasattr(strategy, "train"):
         raise SystemExit(f"{args.strategy!r} is not trainable")
-    strategy.train(SimEnv(), episodes=args.episodes, verbose=True)
+    kwargs = {}
+    if args.teacher:
+        teacher_config = {"weights": args.teacher_weights, "depth": args.teacher_depth}
+        kwargs["teacher"] = make_strategy(
+            args.teacher, **{k: v for k, v in teacher_config.items() if v is not None})
+    if args.lr is not None:
+        kwargs["lr"] = args.lr
+    if args.save and "checkpoint" in inspect.signature(strategy.train).parameters:
+        kwargs["checkpoint"] = args.save   # long GPU runs save as they go
+    strategy.train(SimEnv(), episodes=args.episodes, verbose=True, **kwargs)
     if args.save:
         strategy.save(args.save)
         print(f"Saved to {args.save}")
@@ -115,6 +126,10 @@ def build_parser():
     add_strategy_knobs(sp)
     sp.add_argument("--episodes", type=int, default=10_000)
     sp.add_argument("--save")
+    sp.add_argument("--teacher", help="strategy to imitate (for --strategy imitation)")
+    sp.add_argument("--teacher-weights", dest="teacher_weights")
+    sp.add_argument("--teacher-depth", dest="teacher_depth", type=int)
+    sp.add_argument("--lr", type=float, help="learning rate (dqn, imitation)")
     sp.set_defaults(func=cmd_train)
 
     return p

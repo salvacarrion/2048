@@ -20,6 +20,12 @@ from playbook.heuristics import get_heuristic
 ExpectimaxStrategy(heuristic=get_heuristic("gradient"), depth=3)
 ```
 
+[`lookahead.py`](lookahead.py) is the same expectimax idea for the *learning*
+players: instead of a hand-written heuristic at the leaves it uses a learned
+`V(afterstate)`, and it expands the tree level by level on numpy batches so a
+neural network scores every leaf in one forward pass. It is what `--depth` means
+for `ntuple` and `dqn` (`dqn --depth 1` reaches 4096 in ~95% of games).
+
 **Deviations from the original repo (made for correctness/clarity):**
 - `expectimax` now spawns a 2 (exp 1) at 90% and a 4 (exp 2) at 10% — the real
   distribution. The original mistakenly spawned exponents 2 and 4.

@@ -43,7 +43,7 @@ def _build_registry():
     def _ntuple(**c):
         from .strategies.learning.reinforcement.ntuple import NTupleStrategy
         weights = c.pop("weights", None)
-        agent = NTupleStrategy.load(weights) if weights else NTupleStrategy(**c)
+        agent = NTupleStrategy.load(weights, **c) if weights else NTupleStrategy(**c)
         return agent
 
     def _genetic(**c):
@@ -53,15 +53,17 @@ def _build_registry():
     def _dqn(**c):
         from .strategies.learning.reinforcement.deep.dqn import DQNStrategy
         weights = c.pop("weights", None)
-        return DQNStrategy.load(weights) if weights else DQNStrategy(**c)
+        return DQNStrategy.load(weights, **c) if weights else DQNStrategy(**c)
 
     def _qlearning(**c):
         from .strategies.learning.reinforcement.tabular.q_learning import QLearningStrategy
-        return QLearningStrategy(**c)
+        weights = c.pop("weights", None)
+        return QLearningStrategy.load(weights, **c) if weights else QLearningStrategy(**c)
 
     def _imitation(**c):
         from .strategies.learning.supervised.imitation import ImitationStrategy
-        return ImitationStrategy()
+        weights = c.pop("weights", None)
+        return ImitationStrategy.load(weights, **c) if weights else ImitationStrategy(**c)
 
     reg["ntuple"] = _ntuple
     reg["genetic"] = _genetic

@@ -8,12 +8,20 @@ strategy never knows (or cares) which one it is running against.
 import math
 import random
 from abc import ABC, abstractmethod
+from collections import namedtuple
 
 import numpy as np
 
 from . import board as B
 from .board import Move, empty_board, free_cells, simulate_move
 from .rules import is_terminal, legal_moves
+
+
+#: One step of experience, as handed to :meth:`Trainable.observe`: the board the
+#: move was played on, the move, the points it scored, the board after the
+#: slide+merge (before the spawn), the board after the spawn, and whether that
+#: board is game over.
+Transition = namedtuple("Transition", "state move reward afterstate next_state done")
 
 
 class Env(ABC):

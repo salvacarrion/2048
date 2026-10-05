@@ -16,7 +16,7 @@ from .board import (
     to_value,
     to_values,
 )
-from .env import BrowserEnv, Env, SimEnv
+from .env import BrowserEnv, Env, SimEnv, Transition
 from .rules import is_blocked, is_terminal, legal_moves
 
 __all__ = [
@@ -25,5 +25,5 @@ __all__ = [
     "free_cells", "count_empty", "set_tile", "add_random_tile",
     "to_value", "to_values", "render", "move_name",
     "legal_moves", "is_terminal", "is_blocked",
-    "Env", "SimEnv", "BrowserEnv",
+    "Env", "SimEnv", "BrowserEnv", "Transition",
 ]
