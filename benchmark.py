@@ -9,15 +9,15 @@ how often the 2048 and 4096 tiles were reached, the highest tile seen, and speed
     python benchmark.py                                   # the default lineup
     python benchmark.py --strategies all --games 50
     python benchmark.py --strategies expectimax,mcts --depth 4 --games 20
-    python benchmark.py --strategies mcts --mcts-runs 60 --mcts-depth 40
+    python benchmark.py --strategies rollouts,mcts --runs 40 --rollout-depth 40
     python benchmark.py --strategies ntuple --ntuple-weights mynet.npz
     python benchmark.py --strategies ntuple --ntuple-untrained   # the raw, unlearned net
     python benchmark.py --strategies ntuple,dqn --lookahead 1    # learned value + search
     python benchmark.py --markdown                        # also print a GitHub table
 
-The learning players (`ntuple`, `dqn`, `imitation`, `qlearning`) load the bundled,
-trained weights by default, so they show what each learner can actually do, not
-an untrained model.
+The trained players (`genetic`, `cmaes`, `qlearning`, `ntuple`, `ppo`, `dqn`,
+`imitation`) load the bundled weights by default, so they show what each one can
+actually do, not an untrained model.
 
 Both the games *and* each strategy's own RNG are seeded from ``--seed``, so every
 strategy faces the same starting boards and the numbers are reproducible run to
@@ -37,37 +37,45 @@ from playbook.registry import available
 # trained). Loaded by default so the learners benchmark as *trained* agents.
 _LEARNING = Path(__file__).resolve().parent / "playbook" / "strategies" / "learning"
 DEFAULT_NTUPLE_WEIGHTS = _LEARNING / "reinforcement" / "ntuple" / "ntuple.npz"
+_OPTIMIZATION = Path(__file__).resolve().parent / "playbook" / "strategies" / "optimization"
 DEFAULT_WEIGHTS = {
+    "genetic": _OPTIMIZATION / "genetic.npy",
+    "cmaes": _OPTIMIZATION / "cmaes.npy",
     "dqn": _LEARNING / "reinforcement" / "deep" / "dqn.pt",
+    "ppo": _LEARNING / "reinforcement" / "deep" / "ppo.pt",
     "imitation": _LEARNING / "supervised" / "imitation.pt",
     "qlearning": _LEARNING / "reinforcement" / "tabular" / "qlearning.pkl",
 }
 
 # Default knobs per strategy when benchmarking toward 2048. Search strategies
-# get a depth that is a sensible accuracy/speed trade-off; `mcts` gets enough
-# rollouts to play seriously. Override search depth on the CLI with --depth.
+# get a depth that is a sensible accuracy/speed trade-off. `rollouts` and `mcts`
+# get the same playout budget (20 per move x ~4 moves = 80 simulations), so they
+# differ only in where the playouts go. Override search depth with --depth.
 PROFILES = {
     "random": {},
     "greedy": {},
     "maximization": {"depth": 3},
     "minimax": {"depth": 3},
     "expectimax": {"depth": 3},
-    "mcts": {"runs": 20, "depth": 20},
+    "rollouts": {"runs": 20, "depth": 20},
+    "mcts": {"runs": 80, "depth": 20},
     "ntuple": {},   # weights are resolved in _config (bundled net by default)
     "genetic": {},
+    "cmaes": {},
+    "ppo": {},
     "qlearning": {},
     "dqn": {},
     "imitation": {},
 }
 
 # Sensible "run everything that plays out of the box" lineup. Excludes `manual`
-# (needs a human) and `genetic` (untrained by default).
-DEFAULT_SET = ["random", "greedy", "maximization", "minimax", "expectimax", "mcts",
-               "qlearning", "ntuple", "dqn", "imitation"]
+# (needs a human).
+DEFAULT_SET = ["random", "greedy", "maximization", "minimax", "expectimax", "rollouts",
+               "mcts", "genetic", "cmaes", "qlearning", "ntuple", "ppo", "dqn", "imitation"]
 
 
 # The neural players need torch (pip install -e ".[deep]").
-_NEEDS_TORCH = {"dqn", "imitation"}
+_NEEDS_TORCH = {"dqn", "ppo", "imitation"}
 
 
 def _torch_available():
@@ -82,7 +90,7 @@ def _resolve(names):
     if names == ["all"]:
         if _torch_available():
             return DEFAULT_SET
-        print("(torch is not installed: skipping dqn and imitation)")
+        print("(torch is not installed: skipping dqn, ppo and imitation)")
         return [n for n in DEFAULT_SET if n not in _NEEDS_TORCH]
     unknown = [n for n in names if n not in available()]
     if unknown:
@@ -91,8 +99,10 @@ def _resolve(names):
 
 
 # Strategies whose `depth` is the search-tree depth (so --depth applies to them,
-# but not to mcts, where `depth` is the rollout length).
+# but not to rollouts/mcts, where `depth` is the playout length).
 _TREE_SEARCH = {"maximization", "minimax", "expectimax"}
+# Playout searchers: --runs and --rollout-depth apply to them.
+_PLAYOUTS = {"rollouts", "mcts"}
 # Learned afterstate-value players: --lookahead adds expectimax levels on top.
 _LOOKAHEAD = {"ntuple", "dqn"}
 
@@ -102,11 +112,11 @@ def _config(name, args):
     cfg["seed"] = args.seed   # seed every strategy's RNG, not just the games
     if args.depth is not None and name in _TREE_SEARCH:
         cfg["depth"] = args.depth
-    if name == "mcts":
-        if args.mcts_runs is not None:
-            cfg["runs"] = args.mcts_runs
-        if args.mcts_depth is not None:
-            cfg["depth"] = args.mcts_depth
+    if name in _PLAYOUTS:
+        if args.runs is not None:
+            cfg["runs"] = args.runs
+        if args.rollout_depth is not None:
+            cfg["depth"] = args.rollout_depth
     if name == "ntuple":
         if args.ntuple_untrained:
             cfg.pop("weights", None)            # play the raw, unlearned net on purpose
@@ -199,10 +209,13 @@ def build_parser():
     p.add_argument("--target", type=int, default=2048, help="win-tile for the reach rate")
     p.add_argument("--depth", type=int, default=None,
                    help="override tree-search depth (maximization/minimax/expectimax)")
-    p.add_argument("--mcts-runs", dest="mcts_runs", type=int, default=None,
-                   help="rollouts per move for mcts (default %d)" % PROFILES["mcts"]["runs"])
-    p.add_argument("--mcts-depth", dest="mcts_depth", type=int, default=None,
-                   help="rollout length for mcts (default %d)" % PROFILES["mcts"]["depth"])
+    p.add_argument("--runs", type=int, default=None,
+                   help="playouts per move for rollouts (default %d) / simulations per move "
+                        "for mcts (default %d)" % (PROFILES["rollouts"]["runs"],
+                                                   PROFILES["mcts"]["runs"]))
+    p.add_argument("--rollout-depth", dest="rollout_depth", type=int, default=None,
+                   help="playout length for rollouts/mcts (default %d)"
+                        % PROFILES["mcts"]["depth"])
     p.add_argument("--ntuple-weights", dest="ntuple_weights", default=None,
                    help="path to a trained n-tuple network (.npz); overrides the bundled one")
     p.add_argument("--ntuple-untrained", dest="ntuple_untrained", action="store_true",

@@ -15,7 +15,8 @@ EXPLAINING = {
     "maximization": {"depth": 1},
     "minimax": {"depth": 1},
     "expectimax": {"depth": 1},
-    "mcts": {"depth": 5, "runs": 3},
+    "rollouts": {"depth": 5, "runs": 3},
+    "mcts": {"depth": 5, "runs": 8},
     "ntuple": {},
 }
 

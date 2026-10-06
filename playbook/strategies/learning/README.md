@@ -8,9 +8,9 @@ heuristic. Two sub-families:
   copy them (distilling slow search into a fast reactive player), with DAgger.
 - [`reinforcement/`](reinforcement/) — learn from the reward of self-play. Split
   by representation: `tabular/` (Q-learning), `ntuple/` (the classic 2048
-  method, fully worked), and `deep/` (DQN).
+  method, fully worked), and `deep/` (DQN and PPO).
 
-The neural strategies (`dqn`, `imitation`) share [`networks.py`](networks.py)
+The neural strategies (`dqn`, `ppo`, `imitation`) share [`networks.py`](networks.py)
 and train on the batched simulator ([`game/vector.py`](../../game/vector.py)),
 which plays hundreds of games at once so the GPU always has a full batch.
 
@@ -22,6 +22,7 @@ CLI:
 python -m playbook train --strategy ntuple --episodes 20000 --save ntuple.npz
 python -m playbook eval  --strategy ntuple --weights ntuple.npz --games 50
 python -m playbook train --strategy dqn --episodes 85000 --save dqn.pt    # GPU, ~2 h
+python -m playbook train --strategy ppo --episodes 200000 --save ppo.pt   # GPU, ~1 h
 python -m playbook train --strategy imitation --episodes 3000 --save imitation.pt \
     --teacher dqn --teacher-weights dqn.pt --teacher-depth 1             # GPU, ~30 min
 ```

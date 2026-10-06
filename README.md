@@ -13,7 +13,7 @@ A didactic catalog of AI strategies for [2048](https://classic.play2048.co), bui
 ## Highlights
 
 - **One interface for every player**: `select_move(board, legal) -> Move`. That is the whole contract.
-- **Strategies grouped by technique**: search (minimax, expectimax, MCTS…), optimization (genetic), reinforcement learning (tabular Q-learning, n-tuple TD, DQN), supervised (imitation).
+- **Strategies grouped by technique**: search (minimax, expectimax, Monte Carlo rollouts, MCTS…), optimization (genetic algorithm, CMA-ES), reinforcement learning (tabular Q-learning, n-tuple TD, DQN, PPO), supervised (imitation).
 - **GPU-trained neural players**: a DQN that learns the value of afterstates and an imitation student distilled from it, trained on a batched simulator that plays hundreds of games at once (~500k random moves/s vs ~3k for the one-game simulator).
 - **Reusable heuristics**: monotonicity, corner gradients, free tiles, merges… combined with explicit weights, no hidden globals.
 - **Simulator *or* live browser** behind the same `Env` API, so a strategy you trained offline can play the real game unchanged.
@@ -47,6 +47,27 @@ python -m playbook eval  --strategy ntuple --weights ntuple.npz --games 50
 python -m playbook eval  --strategy dqn --weights playbook/strategies/learning/reinforcement/deep/dqn.pt --depth 1
 python -m playbook play  --strategy mcts --env browser             # live, in Chrome
 ```
+
+### Try the trained players
+
+Every trained player ships with its weights, so you can play with it right after cloning (no training, no GPU needed; `ppo`, `dqn` and `imitation` need `pip install -e ".[deep]"`). Pass the file with `--weights`:
+
+| Strategy | Weights |
+|---|---|
+| `genetic` | `playbook/strategies/optimization/genetic.npy` |
+| `cmaes` | `playbook/strategies/optimization/cmaes.npy` |
+| `qlearning` | `playbook/strategies/learning/reinforcement/tabular/qlearning.pkl` |
+| `ntuple` | `playbook/strategies/learning/reinforcement/ntuple/ntuple.npz` |
+| `ppo` | `playbook/strategies/learning/reinforcement/deep/ppo.pt` |
+| `dqn` | `playbook/strategies/learning/reinforcement/deep/dqn.pt` |
+| `imitation` | `playbook/strategies/learning/supervised/imitation.pt` |
+
+```bash
+python -m playbook play --strategy ppo --weights playbook/strategies/learning/reinforcement/deep/ppo.pt --delay 0.05
+python -m playbook eval --strategy dqn --weights playbook/strategies/learning/reinforcement/deep/dqn.pt --depth 1 --games 10
+```
+
+`benchmark.py` loads these files automatically.
 
 To play the live game, start Chrome with remote debugging and open the board in that window:
 
@@ -88,7 +109,7 @@ move #160 [UP]  score=2048
 | `--step` | wait for Enter before each move |
 | `--explain` / `--no-explain` | show or hide the per-move scores (on by default) |
 
-Each strategy's number is on its own scale: immediate points for `greedy`, the heuristic value of the look-ahead for the search players, the learned `reward + V(afterstate)` (in points) for `ntuple` and `dqn`, the Q-table entry for `qlearning`, and the student's confidence (%) for `imitation`. Read the *ranking*, not the absolute value.
+Each strategy's number is on its own scale: immediate points for `greedy`, the heuristic value of the look-ahead for the search players, the learned `reward + V(afterstate)` (in points) for `ntuple` and `dqn`, the Q-table entry for `qlearning`, the share of simulations (%) for `mcts`, and the policy's probability (%) for `ppo` and `imitation`. Read the *ranking*, not the absolute value.
 
 ## Strategies
 
@@ -99,15 +120,18 @@ Each strategy's number is on its own scale: immediate points for `greedy`, the h
 | `manual` | baseline | you type the moves (for debugging / playing) | depends on you |
 | `maximization` | search | look ahead, assume an average random spawn | ✓ |
 | `minimax` | search | α-β, treats the spawn as an adversary | ✓ |
-| `expectimax` | search | α-β over the *real* 2/4 spawn distribution (the classic strong baseline) | ✓✓ |
-| `mcts` | search | random rollouts from each candidate move | ✓ |
-| `genetic` | optimization | evolve the weights of a heuristic player | ✓ |
+| `expectimax` | search | averages over the *real* 2/4 spawn distribution instead of assuming the worst (the classic strong baseline) | ✓✓ |
+| `rollouts` | search | flat Monte Carlo: the same number of random playouts for each candidate move | ✓ |
+| `mcts` | search | Monte Carlo Tree Search (UCT): the same playouts, spent adaptively by a search tree | ✓✓ |
+| `genetic` | optimization | evolve the weights of a heuristic player | ✓✓ |
+| `cmaes` | optimization | CMA-ES: the same player, tuned by an evolution strategy that adapts its search distribution | ✓✓ |
 | `qlearning` | reinforcement (tabular) | a Q-table over a coarse summary of the board: learns, and shows why tables don't scale | ✗ |
 | `ntuple` | reinforcement (TD) | learn a value function over tile patterns, no neural net | ✓✓✓ |
+| `ppo` | reinforcement (deep) | policy gradient (actor-critic, clipped updates): a neural net learns the policy itself (GPU) | ✓✓✓✓ |
 | `dqn` | reinforcement (deep) | a neural net learns the value of afterstates: replay buffer, target network, n-step returns (GPU) | ✓✓✓✓ |
 | `imitation` | supervised | a conv policy net distilled from `dqn` + lookahead, with DAgger and soft targets (GPU) | ✓✓✓ |
 
-Search strategies take a `--depth` (and `--runs` for MCTS) and an injectable `--heuristic`. The two players that learn a value of afterstates (`ntuple`, `dqn`) also take `--depth`: expectimax levels searched before trusting the learned value (`--depth 1` averages over every possible spawn after each move; see [`search/lookahead.py`](playbook/strategies/search/lookahead.py)). The `ntuple` agent is the recommended entry point into RL: it learns strong play on a CPU in minutes, with no neural network. `dqn` and `imitation` need torch and, to train in reasonable time, a GPU; trained weights for every learner ship with the repo.
+Search strategies take a `--depth` (and `--runs` for `rollouts` / `mcts`) and an injectable `--heuristic`. The two players that learn a value of afterstates (`ntuple`, `dqn`) also take `--depth`: expectimax levels searched before trusting the learned value (`--depth 1` averages over every possible spawn after each move; see [`search/lookahead.py`](playbook/strategies/search/lookahead.py)). The `ntuple` agent is the recommended entry point into RL: it learns strong play on a CPU in minutes, with no neural network. `ppo`, `dqn` and `imitation` need torch and, to train in reasonable time, a GPU; trained weights for every learner and optimizer ship with the repo.
 
 ## Results
 
@@ -118,16 +142,20 @@ python benchmark.py --strategies all --games 50 --markdown
 python benchmark.py --strategies ntuple,dqn --lookahead 1 --games 50 --markdown   # learned value + search
 ```
 
-Example run (50 games, seed 0; tree search at depth 3, `mcts` at 20 runs × depth 20; the learners use the bundled weights; `(depth 1)` adds one level of expectimax on top of the learned value). Measured on a Windows desktop with a GTX 1070; the CPU-only players ran while the GPU models were training, so their moves/s are pessimistic. Numbers vary by machine and seed; regenerate with the commands above.
+Example run (50 games, seed 0; tree search at depth 3; `rollouts` at 20 playouts per move and `mcts` at 80 simulations per move, both 20 moves deep, i.e. the same playout budget; the trained players use the bundled weights; `(depth 1)` adds one level of expectimax on top of the learned value). Measured on a Windows desktop with a GTX 1070; the CPU-only players ran while other models were training, so their moves/s are pessimistic. Numbers vary by machine and seed; regenerate with the commands above.
 
 | Strategy | Avg score | Best | 2048 rate | 4096 rate | Top tile | Avg moves | Moves/s |
 |---|--:|--:|--:|--:|--:|--:|--:|
 | `dqn (depth 1)` | 84,160 | 133,008 | 100% | 98% | 8,192 | 3758 | 613 |
+| `ppo` | 59,700 | 127,296 | 96% | 70% | 8,192 | 2760 | 636 |
 | `dqn` | 45,732 | 79,388 | 86% | 52% | 4,096 | 2164 | 730 |
 | `imitation` | 42,299 | 80,536 | 84% | 34% | 4,096 | 2072 | 426 |
 | `ntuple (depth 1)` | 42,212 | 75,988 | 94% | 28% | 4,096 | 2102 | 1,168 |
 | `ntuple` | 29,163 | 59,680 | 68% | 8% | 4,096 | 1522 | 1,219 |
-| `mcts` | 12,406 | 26,972 | 6% | 0% | 2,048 | 731 | 6 |
+| `mcts` | 17,970 | 36,124 | 26% | 0% | 2,048 | 1003 | 5 |
+| `cmaes` | 17,277 | 47,664 | 24% | 2% | 4,096 | 987 | 1,221 |
+| `genetic` | 15,263 | 33,688 | 14% | 0% | 2,048 | 888 | 1,235 |
+| `rollouts` | 12,406 | 26,972 | 6% | 0% | 2,048 | 731 | 6 |
 | `expectimax` | 10,653 | 25,624 | 10% | 0% | 2,048 | 658 | 19 |
 | `maximization` | 9,389 | 16,500 | 0% | 0% | 1,024 | 591 | 62 |
 | `minimax` | 6,843 | 16,224 | 0% | 0% | 1,024 | 469 | 112 |
@@ -135,11 +163,15 @@ Example run (50 games, seed 0; tree search at depth 3, `mcts` at 20 runs × dept
 | `qlearning` | 2,425 | 3,992 | 0% | 0% | 256 | 210 | 2,062 |
 | `random` | 1,078 | 2,740 | 0% | 0% | 256 | 117 | 2,811 |
 
-Read the table as two questions: *how strong* (avg/best score, 2048/4096 rates, top tile) and *how cheap* (moves/s). `greedy` and `random` are essentially free but plateau early; the search players trade speed for strength: `expectimax` is principled but pays per move for its lookahead, and `mcts` (random rollouts scored by the points they earn) is the strongest hand-written searcher but the slowest. The learners do their expensive work once, during training (`ntuple` on a CPU in minutes, `dqn` and `imitation` on a GPU in a couple of hours), then play both stronger *and* faster. `dqn` is the strongest player in the catalog, and with one level of lookahead on top of its learned value it reaches 4096 in 98% of games. `imitation` shows how far a purely reactive policy (one forward pass per move, no simulation at all) gets by copying it. `qlearning` sits between `random` and `greedy`: the table learns, but it cannot generalize from one board to the next, which is the point of that chapter.
+Read the table as two questions: *how strong* (avg/best score, 2048/4096 rates, top tile) and *how cheap* (moves/s). A few things it shows:
+
+- **Search.** `greedy` and `random` are free but plateau early. `expectimax` is principled but pays per move for its lookahead. With the same random playouts, `mcts` scores ~45% more than flat `rollouts` just by spending them where they matter.
+- **Optimization.** `genetic` and `cmaes` play a greedy one-move lookahead over a few weighted features, yet with good weights `cmaes` comes within 4% of the best hand-written searcher (`mcts`) while playing ~250x faster.
+- **Learning.** The learners do their expensive work once, during training, then play both stronger *and* fast. `qlearning` doubles `random` but stays below `greedy` (a table cannot generalize, which is the point of that chapter); `ntuple` learns strong play on a CPU; `ppo`, a policy trained in one hour on a GPU, is the best player without search; and `dqn`'s value function plugs into expectimax: with one level of lookahead it reaches 4096 in 98% of games. `imitation` shows how far a purely reactive copy of that player gets.
 
 ## Training the neural players on a GPU
 
-`dqn` and `imitation` were trained on a GTX 1070 (8 GB); the exact recipes are in [`deep/README.md`](playbook/strategies/learning/reinforcement/deep/README.md) and [`supervised/README.md`](playbook/strategies/learning/supervised/README.md). What each learner reaches on fresh games:
+`ppo`, `dqn` and `imitation` were trained on a GTX 1070 (8 GB); the exact recipes are in [`deep/README.md`](playbook/strategies/learning/reinforcement/deep/README.md) and [`supervised/README.md`](playbook/strategies/learning/supervised/README.md) (and, for the CPU-trained `genetic` / `cmaes`, in [`optimization/README.md`](playbook/strategies/optimization/README.md)). What each learner reaches on fresh games:
 
 | Learner | Training | Avg score | 2048 | 4096 | 8192 |
 |---|---|--:|--:|--:|--:|
@@ -147,15 +179,17 @@ Read the table as two questions: *how strong* (avg/best score, 2048/4096 rates, 
 | `ntuple` (bundled) | CPU | 28,150 | 62% | 6% | 0% |
 | `imitation` (policy net, no search) | GPU, ~30 min, distilled from `dqn --depth 1` | 39,327 | 83% | 29% | 0% |
 | `dqn` (value net, greedy) | GPU, ~2 h + 12 min fine-tune | 41,229 | 79% | 48% | 0% |
+| `ppo` (policy net, no search) | GPU, ~1 h | 55,946 | 92% | 60% | 7% |
 | `dqn --depth 1` | (same net + one level of expectimax) | 80,402 | 99% | 95% | 14% |
 
 (200–300 batched games each, separate from the seeded benchmark in [Results](#results).)
 
-Three things made the difference, all explained in the chapter READMEs:
+What made the difference, all explained in the chapter READMEs:
 
 - **A batched simulator.** One Python game manages ~3k moves/s; [`VecSimEnv`](playbook/game/vector.py) plays hundreds of games at once through table lookups, so the GPU always has a full batch (~20k moves/s *including* learning).
 - **n-step returns for the DQN.** With 1-step targets the net predicted ~20 points from an opening board worth thousands, so it played like a heuristic. Summing the points of the next 10 moves before bootstrapping doubled the score reached in the same 8 minutes of training (~10k → ~21k average); a 2-hour run then got to ~35k, and a short phase at a lower learning rate to 4096 in half the games.
 - **Soft targets for imitation.** Copying the teacher's move gets 4096 in 9% of games; learning the teacher's whole `softmax(Q / T)` over moves, from the same data, gets 29%.
+- **Policy vs value.** Without search, PPO's policy (one hour of training) beats the DQN's greedy play; but only a value function plugs into expectimax, and `dqn --depth 1` stays on top.
 
 ## How it works
 
@@ -168,13 +202,13 @@ playbook/
   heuristics/   reusable board-evaluation functions (the shared "ideas")
   strategies/   the players, grouped by technique:
       baselines/      random · greedy · manual
-      search/         maximization · minimax · expectimax · mcts
+      search/         maximization · minimax · expectimax · rollouts · mcts
                       + lookahead: batched expectimax over a learned value
-      optimization/   genetic   (+ room for cma-es, annealing, hill-climb)
+      optimization/   genetic · cmaes   (+ room for annealing, hill-climb)
       learning/
           networks.py     the neural nets (value / policy), shared
           supervised/     imitation
-          reinforcement/  tabular (q-learning) · ntuple (worked) · deep (dqn)
+          reinforcement/  tabular (q-learning) · ntuple (worked) · deep (dqn, ppo)
   evaluation/   play games, aggregate metrics, compare strategies
   registry.py   name -> strategy factory
   cli.py        the commands shown above

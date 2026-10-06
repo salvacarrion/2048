@@ -19,6 +19,7 @@ import random
 import numpy as np
 
 from playbook.game.board import Move, simulate_move
+from playbook.game.rules import legal_moves
 from playbook.strategies.base import Strategy, Trainable
 from playbook.strategies.search.lookahead import expectimax_q
 
@@ -133,11 +134,20 @@ class NTupleStrategy(Strategy, Trainable):
 
     # -- learning ------------------------------------------------------------
     def observe(self, transition):
-        """Single TD(0) afterstate update (online API). See :meth:`train`."""
-        if transition.done:
-            target = 0.0
-        else:
-            target = transition.reward + self.net.value(transition.next_state)
+        """Single TD(0) afterstate update (online API): the same rule :meth:`train`
+        applies after every move.
+
+        The afterstate is worth what the board that followed it offered: the
+        best ``reward + V(afterstate)`` from ``next_state`` (0 if that board is
+        game over). ``transition.reward`` is *not* part of it -- those points were
+        scored by the move that produced the afterstate, so they are already
+        behind it.
+        """
+        target = 0.0
+        legal = legal_moves(transition.next_state)
+        if not transition.done and legal:
+            _, next_after, next_reward = self._best(transition.next_state, legal)
+            target = next_reward + self.net.value(next_after)
         delta = self.alpha * (target - self.net.value(transition.afterstate))
         self.net.update(transition.afterstate, delta)
 

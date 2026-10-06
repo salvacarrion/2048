@@ -11,7 +11,12 @@ pip install "playbook-2048[deep]"     # installs torch
 
 | File | Idea | Status |
 |---|---|---|
-| `dqn.py` | Deep Q-Network on afterstates: replay buffer, target network, n-step returns | implemented + trained weights (`dqn.pt`) |
+| `dqn.py` | Deep Q-Network on afterstates: replay buffer, target network, n-step returns (value-based) | implemented + trained weights (`dqn.pt`) |
+| `ppo.py` | Proximal Policy Optimization: actor-critic, GAE, clipped updates (policy-based) | implemented + trained weights (`ppo.pt`) |
+
+The two families of deep RL, side by side: `dqn` learns how good each board is
+and plays the best-valued move; `ppo` learns the probabilities of the moves
+directly and plays the most likely one.
 
 ## What makes it work on 2048
 
@@ -64,4 +69,35 @@ python -m playbook eval --strategy dqn --weights dqn.pt --games 50 --depth 1  # 
 ([`search/lookahead.py`](../../../search/lookahead.py)): every leaf of the tree
 is scored in a single batched forward pass, so it stays fast.
 
-`policy_gradient.py` (REINFORCE / actor-critic) is a natural next file to add.
+## PPO: learning the policy itself
+
+[`ppo.py`](ppo.py) is the policy-gradient counterpart: one network outputs four
+move probabilities (illegal moves masked out) plus a value `V(s)`. It plays a
+batch of games by *sampling* from its own policy, measures how much better than
+expected each move turned out (the advantage, with GAE), and nudges the
+probabilities accordingly, never more than `clip` (20%) per update. The data is
+used for a few epochs and thrown away: PPO is on-policy, it cannot learn from a
+replay buffer of older policies the way DQN does.
+
+```bash
+python -m playbook train --strategy ppo --episodes 200000 --save ppo.pt   # GPU
+python -m playbook eval  --strategy ppo --weights ppo.pt --games 50
+```
+
+That command produced the bundled `ppo.pt`: 200,000 games in ~1 hour on a GTX
+1070 (512 games in parallel, ~70k moves/s including learning), with the
+learning rate decaying linearly to 0. During training it *samples* its moves
+and ended around 43k points per game; played with its most likely move (what
+`select_move` does) it is clearly stronger:
+
+| On fresh games (300) | avg score | reaches 2048 | reaches 4096 | reaches 8192 |
+|---|--:|--:|--:|--:|
+| `ppo` (most likely move) | 55,946 | 92% | 60% | 7% |
+| `dqn` (greedy, no search) | 41,229 | 79% | 48% | 0% |
+| `dqn --depth 1` | 80,402 | 99% | 95% | 14% |
+
+So, on this game, the policy beats the value network when neither searches.
+But a policy only ranks moves, while `dqn`'s afterstate value plugs straight into
+expectimax, and with one level of lookahead `dqn` is still the strongest player
+in the catalog. (A fair caveat: PPO's learning rate decayed from the start, while
+`dqn` only got one manual drop at the end; both could probably be pushed further.)

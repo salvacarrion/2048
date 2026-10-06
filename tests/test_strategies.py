@@ -13,7 +13,9 @@ PLAYABLE = {
     "maximization": {"depth": 1},
     "minimax": {"depth": 1},
     "expectimax": {"depth": 1},
-    "mcts": {"depth": 5, "runs": 3},
+    "rollouts": {"depth": 5, "runs": 3},
+    "mcts": {"depth": 5, "runs": 8},
+    "cmaes": {},
     "qlearning": {},
     "ntuple": {},
     "genetic": {},
@@ -22,7 +24,8 @@ PLAYABLE = {
 
 def test_registry_lists_all_families():
     names = set(available())
-    assert {"random", "greedy", "expectimax", "mcts", "ntuple", "genetic", "dqn"} <= names
+    assert {"random", "greedy", "expectimax", "rollouts", "mcts", "ntuple", "genetic",
+            "cmaes", "dqn", "ppo", "imitation"} <= names
 
 
 @pytest.mark.parametrize("name", sorted(PLAYABLE))
@@ -109,3 +112,55 @@ def test_imitation_soft_targets_from_a_scoring_teacher():
     assert np.allclose(targets.sum(axis=1), 1.0)
     assert (targets[~legal] == 0).all()
     assert np.array_equal(targets.argmax(axis=1), moves)
+
+
+def test_ntuple_observe_applies_the_training_rule():
+    """observe() must move V(afterstate) toward the best r' + V(after') that the
+    next board offers, exactly like the update inside train()."""
+    from playbook.game import Transition, legal_moves, simulate_move
+    agent = make_strategy("ntuple", alpha=0.5)
+    agent.net.tables = [t + 1.0 for t in agent.net.tables]   # non-zero values everywhere
+    env = SimEnv(seed=4)
+    board = env.reset()
+    move = sorted(env.legal_moves())[0]
+    after, _, reward = simulate_move(board, move)
+    next_board, _, done, _ = env.step(move)
+    _, next_after, next_reward = agent._best(next_board, legal_moves(next_board))
+    target = next_reward + agent.net.value(next_after)
+    before = agent.net.value(after)
+    agent.observe(Transition(board, move, reward, after, next_board, done))
+    assert np.isclose(agent.net.value(after), before + 0.5 * (target - before))
+
+
+def test_mcts_spends_its_whole_budget():
+    strategy = make_strategy("mcts", runs=40, depth=5, seed=0)
+    board = SimEnv(seed=2).reset()
+    from playbook.game import legal_moves
+    move = strategy.select_move(board, legal_moves(board))
+    shares = strategy.last_scores
+    assert set(shares) == set(legal_moves(board))
+    assert np.isclose(sum(shares.values()), 100.0)       # every simulation counted once
+    assert shares[move] == max(shares.values())
+
+
+def test_ppo_trains_plays_and_round_trips(tmp_path):
+    pytest.importorskip("torch")
+    agent = make_strategy("ppo", device="cpu", seed=0, hidden=16)
+    agent.train(episodes=2, n_envs=8, n_steps=32, minibatch=64, report_every=1)
+    path = tmp_path / "ppo.pt"
+    agent.save(str(path))
+    loaded = make_strategy("ppo", weights=str(path), device="cpu")
+    result = play_game(loaded, SimEnv(seed=0), max_moves=30)
+    assert result.moves > 0 and loaded.last_scores
+    board = SimEnv(seed=0).reset()
+    assert np.array_equal(agent.select_moves(board[None]), loaded.select_moves(board[None]))
+
+
+def test_optimizers_train_and_round_trip(tmp_path):
+    pytest.importorskip("cma")
+    for name in ("genetic", "cmaes"):
+        agent = make_strategy(name, seed=0)
+        agent.train(episodes=2, population=4, fitness_games=1, max_moves=50, workers=1)
+        path = tmp_path / f"{name}.npy"
+        agent.save(str(path))
+        assert np.allclose(make_strategy(name, weights=str(path)).weights, agent.weights)

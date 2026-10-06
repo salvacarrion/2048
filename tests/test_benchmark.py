@@ -7,8 +7,8 @@ def _args(**overrides):
     values = {
         "depth": None,
         "seed": 0,
-        "mcts_runs": None,
-        "mcts_depth": None,
+        "runs": None,
+        "rollout_depth": None,
         "ntuple_weights": None,
         "ntuple_untrained": False,
         "lookahead": 0,
@@ -33,7 +33,7 @@ def test_benchmark_uses_bundled_ntuple_weights_by_default():
 
 
 def test_benchmark_can_override_mcts_profile():
-    cfg = benchmark._config("mcts", _args(seed=123, mcts_runs=10, mcts_depth=12))
+    cfg = benchmark._config("mcts", _args(seed=123, runs=10, rollout_depth=12))
 
     assert cfg["seed"] == 123
     assert cfg["runs"] == 10
@@ -47,7 +47,7 @@ def test_benchmark_can_request_untrained_ntuple():
     assert "weights" not in cfg
 
 def test_benchmark_loads_bundled_weights_for_neural_players():
-    for name in ("dqn", "imitation", "qlearning"):
+    for name in ("genetic", "cmaes", "qlearning", "ppo", "dqn", "imitation"):
         assert benchmark._config(name, _args())["weights"] == str(benchmark.DEFAULT_WEIGHTS[name])
 
 

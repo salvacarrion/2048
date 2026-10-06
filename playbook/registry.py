@@ -23,6 +23,7 @@ def _build_registry():
         ExpectimaxStrategy,
         MaximizationStrategy,
         MctsStrategy,
+        RolloutStrategy,
         MinimaxStrategy,
     )
 
@@ -35,6 +36,7 @@ def _build_registry():
         "maximization": lambda **c: _search(MaximizationStrategy, **c),
         "minimax": lambda **c: _search(MinimaxStrategy, **c),
         "expectimax": lambda **c: _search(ExpectimaxStrategy, **c),
+        "rollouts": lambda **c: _search(RolloutStrategy, **c),
         "mcts": lambda **c: _search(MctsStrategy, **c),
     }
 
@@ -48,12 +50,23 @@ def _build_registry():
 
     def _genetic(**c):
         from .strategies.optimization.genetic import GeneticStrategy
-        return GeneticStrategy(**c)
+        weights = c.pop("weights", None)
+        return GeneticStrategy.load(weights, **c) if weights else GeneticStrategy(**c)
+
+    def _cmaes(**c):
+        from .strategies.optimization.cmaes import CMAESStrategy
+        weights = c.pop("weights", None)
+        return CMAESStrategy.load(weights, **c) if weights else CMAESStrategy(**c)
 
     def _dqn(**c):
         from .strategies.learning.reinforcement.deep.dqn import DQNStrategy
         weights = c.pop("weights", None)
         return DQNStrategy.load(weights, **c) if weights else DQNStrategy(**c)
+
+    def _ppo(**c):
+        from .strategies.learning.reinforcement.deep.ppo import PPOStrategy
+        weights = c.pop("weights", None)
+        return PPOStrategy.load(weights, **c) if weights else PPOStrategy(**c)
 
     def _qlearning(**c):
         from .strategies.learning.reinforcement.tabular.q_learning import QLearningStrategy
@@ -67,7 +80,9 @@ def _build_registry():
 
     reg["ntuple"] = _ntuple
     reg["genetic"] = _genetic
+    reg["cmaes"] = _cmaes
     reg["dqn"] = _dqn
+    reg["ppo"] = _ppo
     reg["qlearning"] = _qlearning
     reg["imitation"] = _imitation
     return reg
